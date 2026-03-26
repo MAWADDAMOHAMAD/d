@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Smart Medical Diagnosis</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<h1>Smart Medical Diagnosis System</h1>
+
+<form action="/predict" method="post">
+
+<h3>Enter your symptoms (5–7)</h3>
+
+<input list="symptoms" name="symptom1" placeholder="Symptom 1" required>
+<input list="symptoms" name="symptom2" placeholder="Symptom 2" required>
+<input list="symptoms" name="symptom3" placeholder="Symptom 3" required>
+<input list="symptoms" name="symptom4" placeholder="Symptom 4" required>
+<input list="symptoms" name="symptom5" placeholder="Symptom 5" required>
+
+<input list="symptoms" name="symptom6" placeholder="Symptom 6">
+<input list="symptoms" name="symptom7" placeholder="Symptom 7">
+<datalist id="symptoms">
+
+{% for symptom in symptoms %}
+
+<option value="{{symptom}}">
+
+{% endfor %}
+
+</datalist>
+
+<button type="submit">Diagnose</button>
+
+</form>
+
+</body>
+</html>

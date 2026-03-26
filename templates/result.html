@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Diagnosis Result</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+/* Body style */
+body {
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(135deg, #728799, #464b77);
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Main container */
+.container {
+    background: white;
+    padding: 40px 30px;
+    border-radius: 20px;
+    width: 500px;
+    max-width: 90%;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+/* Heading styles */
+h1 {
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+h3 {
+    color: #555;
+    margin-bottom: 10px;
+}
+
+/* Symptoms list */
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+li {
+    background: #f1f5f9;
+    margin: 0;
+    padding: 10px 15px;
+    border-radius: 12px;
+    font-weight: 500;
+    color: #333;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+
+/* Predicted disease box */
+.result {
+    margin-top: 10px;
+    padding: 25px;
+    background: #2d3d46;
+    border-radius: 15px;
+    color: white;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.result h2 {
+    margin: 0 0 10px 0;
+    font-size: 22px;
+}
+
+.result p {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+/* Button */
+.button {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 12px 25px;
+    background: #4facfe;
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.button:hover {
+    background: #0077ff;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>Diagnosis Result</h1>
+
+<h3>Symptoms Entered</h3>
+<ul>
+{% for s in symptoms %}
+<li>{{ s }}</li>
+{% endfor %}
+</ul>
+
+<div class="result">
+<h2>Predicted Disease</h2>
+<p>{{ disease }}</p>
+</div>
+
+<a class="button" href="/">Check Another Diagnosis</a>
+
+</div>
+</body>
+</html>
