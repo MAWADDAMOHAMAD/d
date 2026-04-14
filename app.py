@@ -1,18 +1,14 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import pickle
 import numpy as np
 
 app = Flask(__name__)
 
-# ==============================
 # Load model and symptoms
-# ==============================
 model = pickle.load(open("model/disease_model.pkl", "rb"))
 symptoms_list = pickle.load(open("model/symptoms_list.pkl", "rb"))
 
-# ==============================
-# ⚠️ Severe Diseases List
-# ==============================
+# Severe diseases
 SEVERE_DISEASES = [
     "Heart attack",
     "Paralysis (brain hemorrhage)",
@@ -28,9 +24,7 @@ SEVERE_DISEASES = [
     "Typhoid"
 ]
 
-# ==============================
-# Prediction Function
-# ==============================
+# Prediction function
 def predict_disease(user_symptoms):
 
     input_vector = np.zeros(len(symptoms_list))
@@ -44,44 +38,32 @@ def predict_disease(user_symptoms):
 
     return prediction[0]
 
-# ==============================
-# Routes
-# ==============================
+# Home page
 @app.route("/")
 def home():
     return render_template("index.html", symptoms=symptoms_list)
 
-
+# Predict (AJAX)
 @app.route("/predict", methods=["POST"])
 def predict():
 
     symptoms = []
 
     for i in range(1, 8):
-        symptom = request.form.get(f"symptom{i}")
-        if symptom:
-            symptoms.append(symptom)
+        s = request.form.get(f"symptom{i}")
+        if s:
+            symptoms.append(s)
 
-    # Predict disease
     disease = predict_disease(symptoms)
 
-    # ==============================
-    # ⚠️ Warning System
-    # ==============================
-    warning_message = None
-
+    warning = None
     if disease in SEVERE_DISEASES:
-        warning_message = "⚠️ This condition may be serious. Please consult a doctor immediately."
+        warning = "⚠️ This condition may be serious. Please consult a doctor immediately."
 
-    return render_template(
-        "result.html",
-        disease=disease,
-        symptoms=symptoms,
-        warning=warning_message
-    )
+    return jsonify({
+        "disease": disease,
+        "warning": warning
+    })
 
-# ==============================
-# Run App
-# ==============================
 if __name__ == "__main__":
     app.run(debug=True)

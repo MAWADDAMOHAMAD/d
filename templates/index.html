@@ -1,39 +1,108 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Smart Medical Diagnosis</title>
+<title>SMDSS</title>
 <link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
 
-<h1>Smart Medical Diagnosis System</h1>
+<div class="container">
 
-<form action="/predict" method="post">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <p><b>User Name</b></p>
 
-<h3>Enter your symptoms (5–7)</h3>
+        <button class="menu-btn">🏠 Home</button>
+        <button class="menu-btn">🔍 Search History</button>
+        <button class="menu-btn logout">⏻ Log Out</button>
+    </div>
 
-<input list="symptoms" name="symptom1" placeholder="Symptom 1" required>
-<input list="symptoms" name="symptom2" placeholder="Symptom 2" required>
-<input list="symptoms" name="symptom3" placeholder="Symptom 3" required>
-<input list="symptoms" name="symptom4" placeholder="Symptom 4" required>
-<input list="symptoms" name="symptom5" placeholder="Symptom 5" required>
+    <!-- Main -->
+    <div class="main">
 
-<input list="symptoms" name="symptom6" placeholder="Symptom 6">
-<input list="symptoms" name="symptom7" placeholder="Symptom 7">
-<datalist id="symptoms">
+        <h2>Select Symptoms</h2>
 
-{% for symptom in symptoms %}
+        <form id="diagnosisForm">
 
-<option value="{{symptom}}">
+            <div class="symptom-box">
+                <h3>Enter 7 Symptoms</h3>
 
-{% endfor %}
+                <div class="grid">
+                    <input list="symptoms" name="symptom1" placeholder="Symptom 1" required>
+                    <input list="symptoms" name="symptom2" placeholder="Symptom 2" required>
+                    <input list="symptoms" name="symptom3" placeholder="Symptom 3" required>
 
-</datalist>
+                    <input list="symptoms" name="symptom4" placeholder="Symptom 4" required>
+                    <input list="symptoms" name="symptom5" placeholder="Symptom 5" required>
+                    <input list="symptoms" name="symptom6" placeholder="Symptom 6">
 
-<button type="submit">Diagnose</button>
+                    <input list="symptoms" name="symptom7" placeholder="Symptom 7">
+                </div>
 
-</form>
+                <button type="submit" class="predict-btn">Diagnose</button>
+            </div>
+
+        </form>
+
+        <!-- Autocomplete -->
+        <datalist id="symptoms">
+            {% for s in symptoms %}
+            <option value="{{ s }}">
+            {% endfor %}
+        </datalist>
+
+        <!-- RESULT -->
+        <div id="resultBox" class="result-box">
+
+            <div id="warningBox" class="warning"></div>
+
+            <div class="cards">
+                <div class="card">
+                    <h3>Diagnosis</h3>
+                    <p id="diseaseText"></p>
+                </div>
+
+                <div class="card">
+                    <h3>Medication Guidance</h3>
+                    <p>Coming soon...</p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+document.getElementById("diagnosisForm").addEventListener("submit", function(e){
+    e.preventDefault();
+
+    let formData = new FormData(this);
+
+    fetch("/predict", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        document.getElementById("resultBox").style.display = "block";
+
+        document.getElementById("diseaseText").innerText = data.disease;
+
+        let warningBox = document.getElementById("warningBox");
+
+        if(data.warning){
+            warningBox.style.display = "block";
+            warningBox.innerText = data.warning;
+        } else {
+            warningBox.style.display = "none";
+        }
+    });
+});
+</script>
 
 </body>
 </html>
