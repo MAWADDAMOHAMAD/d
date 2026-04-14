@@ -1,8 +1,148 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>SMDSS</title>
+
 <link rel="stylesheet" href="/static/style.css">
+
+<style>
+body {
+    margin: 0;
+    font-family: "Segoe UI", sans-serif;
+    background: #f1f5f9;
+}
+
+/* Layout */
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 240px;
+    background: linear-gradient(180deg, #1e3a8a, #2563eb);
+    color: white;
+    padding: 20px;
+}
+
+.sidebar p {
+    font-size: 18px;
+    margin-bottom: 30px;
+}
+
+.menu-btn {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    background: rgba(255,255,255,0.15);
+    color: white;
+    transition: 0.3s;
+}
+
+.menu-btn:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+.logout {
+    background: #ef4444 !important;
+}
+
+/* Main */
+.main {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+h2 {
+    color: #0f172a;
+}
+
+/* Symptom box */
+.symptom-box {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+/* Inputs */
+input {
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    outline: none;
+    background: #f8fafc;
+    transition: 0.3s;
+}
+
+input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59,130,246,0.15);
+}
+
+/* Button */
+.predict-btn {
+    margin-top: 15px;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.predict-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Result box */
+.result-box {
+    display: none;
+    margin-top: 20px;
+}
+
+.cards {
+    display: flex;
+    gap: 15px;
+}
+
+.card {
+    flex: 1;
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+/* Warning */
+.warning {
+    display: none;
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+</style>
+
 </head>
 
 <body>
@@ -11,11 +151,19 @@
 
     <!-- Sidebar -->
     <div class="sidebar">
-        <p><b>User Name</b></p>
+        <p><b>{{ user }}</b></p>
 
-        <button class="menu-btn">🏠 Home</button>
-        <button class="menu-btn">🔍 Search History</button>
-        <button class="menu-btn logout">⏻ Log Out</button>
+        <a href="/" style="text-decoration:none;">
+            <button class="menu-btn">🏠 Home</button>
+        </a>
+
+        <a href="/history" style="text-decoration:none;">
+            <button class="menu-btn">🔍 Search History</button>
+        </a>
+
+        <a href="/logout" style="text-decoration:none;">
+            <button class="menu-btn logout">⏻ Log Out</button>
+        </a>
     </div>
 
     <!-- Main -->
@@ -31,10 +179,10 @@
                 <div class="grid">
                     <input list="symptoms" name="symptom1" placeholder="Symptom 1" required>
                     <input list="symptoms" name="symptom2" placeholder="Symptom 2" required>
-                    <input list="symptoms" name="symptom3" placeholder="Symptom 3" required>
+                    <input list="symptoms" name="symptom3" placeholder="Symptom 3">
 
-                    <input list="symptoms" name="symptom4" placeholder="Symptom 4" required>
-                    <input list="symptoms" name="symptom5" placeholder="Symptom 5" required>
+                    <input list="symptoms" name="symptom4" placeholder="Symptom 4">
+                    <input list="symptoms" name="symptom5" placeholder="Symptom 5">
                     <input list="symptoms" name="symptom6" placeholder="Symptom 6">
 
                     <input list="symptoms" name="symptom7" placeholder="Symptom 7">
@@ -58,6 +206,7 @@
             <div id="warningBox" class="warning"></div>
 
             <div class="cards">
+
                 <div class="card">
                     <h3>Diagnosis</h3>
                     <p id="diseaseText"></p>
@@ -65,8 +214,10 @@
 
                 <div class="card">
                     <h3>Medication Guidance</h3>
-                    <p>Coming soon...</p>
+                    <p id="medicineText">Waiting for result...</p>
+                    <p id="usageText"></p>
                 </div>
+
             </div>
 
         </div>
@@ -91,6 +242,12 @@ document.getElementById("diagnosisForm").addEventListener("submit", function(e){
         document.getElementById("resultBox").style.display = "block";
 
         document.getElementById("diseaseText").innerText = data.disease;
+
+        document.getElementById("medicineText").innerText =
+            "Medicines: " + data.medicines.join(", ");
+
+        document.getElementById("usageText").innerText =
+            "Usage: " + data.usage;
 
         let warningBox = document.getElementById("warningBox");
 

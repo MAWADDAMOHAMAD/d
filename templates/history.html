@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>History</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: "Segoe UI", sans-serif;
+    background: #f1f5f9;
+}
+
+.container {
+    padding: 30px;
+}
+
+.card {
+    background: white;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>🧠 Search History for {{ user }}</h2>
+
+    {% for h in history %}
+        <div class="card">
+            <b>Disease:</b> {{ h.disease }} <br>
+            <b>Symptoms:</b> {{ h.symptoms }}
+        </div>
+    {% endfor %}
+
+</div>
+
+</body>
+</html>
