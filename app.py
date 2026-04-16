@@ -149,6 +149,35 @@ def history():
         history=history,
         user=session["user"]
     )
+    # ==============================
+# DELETE ONE ITEM
+# ==============================
+@app.route("/delete/<int:id>")
+def delete_item(id):
+    if "user" not in session:
+        return redirect("/login")
+
+    item = History.query.get(id)
+
+    if item and item.username == session["user"]:
+        db.session.delete(item)
+        db.session.commit()
+
+    return redirect("/history")
+
+
+# ==============================
+# DELETE ALL HISTORY
+# ==============================
+@app.route("/delete_all")
+def delete_all():
+    if "user" not in session:
+        return redirect("/login")
+
+    History.query.filter_by(username=session["user"]).delete()
+    db.session.commit()
+
+    return redirect("/history")
 
 # ==============================
 # PREDICT

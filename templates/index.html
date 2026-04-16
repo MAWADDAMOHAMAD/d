@@ -204,6 +204,9 @@ input:focus {
         <div id="resultBox" class="result-box">
 
             <div id="warningBox" class="warning"></div>
+            <button id="hospitalBtn" style="display:none; margin-bottom:15px; padding:10px; border:none; border-radius:10px; background:#dc2626; color:white; cursor:pointer;">
+        🏥 Find Nearby Hospitals
+    </button>
 
             <div class="cards">
 
@@ -250,14 +253,43 @@ document.getElementById("diagnosisForm").addEventListener("submit", function(e){
             "Usage: " + data.usage;
 
         let warningBox = document.getElementById("warningBox");
+        let hospitalBtn = document.getElementById("hospitalBtn");
 
         if(data.warning){
             warningBox.style.display = "block";
             warningBox.innerText = data.warning;
+
+            // SHOW hospital button
+            hospitalBtn.style.display = "block";
+
         } else {
             warningBox.style.display = "none";
+            hospitalBtn.style.display = "none";
         }
     });
+});
+
+
+// 🏥 OPEN GOOGLE MAPS
+document.getElementById("hospitalBtn").addEventListener("click", function(){
+
+    if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(function(position){
+
+            let lat = position.coords.latitude;
+            let lon = position.coords.longitude;
+
+            let url = `https://www.google.com/maps/search/hospitals/@${lat},${lon},15z`;
+
+            window.open(url, "_blank");
+
+        }, function(){
+            alert("Location access denied!");
+        });
+    } else {
+        alert("Geolocation not supported.");
+    }
+
 });
 </script>
 

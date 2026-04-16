@@ -14,12 +14,39 @@ body {
     padding: 30px;
 }
 
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .card {
     background: white;
     padding: 15px;
     margin: 10px 0;
-    border-radius: 10px;
+    border-radius: 12px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+button {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.delete-btn {
+    background: #ef4444;
+    color: white;
+}
+
+.delete-all {
+    background: #dc2626;
+    color: white;
+    padding: 10px 15px;
 }
 </style>
 
@@ -29,12 +56,26 @@ body {
 
 <div class="container">
 
-    <h2>🧠 Search History for {{ user }}</h2>
+    <div class="header">
+        <h2>🧠 History for {{ user }}</h2>
+
+        <!-- DELETE ALL -->
+        <a href="/delete_all" onclick="return confirm('Delete ALL history? This cannot be undone!')">
+            <button class="delete-all">Delete All</button>
+        </a>
+    </div>
 
     {% for h in history %}
         <div class="card">
-            <b>Disease:</b> {{ h.disease }} <br>
-            <b>Symptoms:</b> {{ h.symptoms }}
+            <div>
+                <b>Disease:</b> {{ h.disease }} <br>
+                <b>Symptoms:</b> {{ h.symptoms }}
+            </div>
+
+            <!-- DELETE ONE -->
+            <a href="/delete/{{ h.id }}" onclick="return confirm(' Delete This Record?')">
+                <button class="delete-btn">Delete</button>
+            </a>
         </div>
     {% endfor %}
 
