@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, jsonify, redirect, session, u
 from flask_sqlalchemy import SQLAlchemy
 import pickle
 import numpy as np
+import pandas as pd
+
 
 app = Flask(__name__)
 app.secret_key = "secret123"
@@ -34,6 +36,20 @@ model = pickle.load(open("model/disease_model.pkl", "rb"))
 symptoms_list = pickle.load(open("model/symptoms_list.pkl", "rb"))
 
 # ==============================
+# Load Description Dataset ✅
+# ==============================
+description_df = pd.read_csv('dataset/archive/symptom_Description.csv')
+description_df.columns = description_df.columns.str.strip()
+
+def get_description(disease_name):
+    result = description_df[description_df['Disease'] == disease_name]
+
+    if not result.empty:
+        return result['Description'].values[0]
+    else:
+        return "No description available."
+
+# ==============================
 # Severe Diseases
 # ==============================
 SEVERE_DISEASES = [
@@ -43,18 +59,19 @@ SEVERE_DISEASES = [
 ]
 
 # ==============================
-# Medicine Data
+# Medicine Data (Simple Default)
 # ==============================
-MEDICINE_DATA = {
-    "Pneumonia": {
-        "medicines": ["Azithromycin", "Paracetamol"],
-        "usage": "Take antibiotics as prescribed. Rest well."
-    },
-    "Diabetes": {
-        "medicines": ["Metformin"],
-        "usage": "Monitor sugar levels daily."
-    }
-}
+precaution_df = pd.read_csv('dataset/archive/symptom_precaution.csv')
+precaution_df.columns = precaution_df.columns.str.strip()
+
+def get_precautions(disease_name):
+    result = precaution_df[precaution_df['Disease'] == disease_name]
+
+    if not result.empty:
+        precautions = result.iloc[0, 1:].dropna().tolist()
+        return precautions
+    else:
+        return ["Consult a doctor"]
 
 # ==============================
 # Helper: Predict Disease
@@ -69,10 +86,33 @@ def predict_disease(user_symptoms):
     return model.predict([input_vector])[0]
 
 # ==============================
-# HOME (Dashboard)
+# about
 # ==============================
 @app.route("/")
 def home():
+    return render_template("about.html")
+
+
+@app.route("/about")
+def about():
+    return render_template("about.html")
+
+# ==============================
+# try system
+# ==============================
+
+
+@app.route("/try-system")
+def try_system():
+    if "user" in session:
+        return redirect(url_for("dashboard"))  # already logged in → go system
+    else:
+        return redirect(url_for("login"))      # first time → login
+# ==============================
+# HOME (Dashboard)
+# ==============================
+@app.route("/dashboard")
+def dashboard():
     if "user" not in session:
         return redirect(url_for("login"))
 
@@ -84,7 +124,6 @@ def home():
         history=history,
         user=session["user"]
     )
-
 # ==============================
 # LOGIN
 # ==============================
@@ -98,9 +137,9 @@ def login():
 
         if user:
             session["user"] = username
-            return redirect(url_for("home"))
-        else:
-            return "❌ Invalid username or password"
+            return redirect(url_for("dashboard"))  # 🔥 GO TO SYSTEM
+
+        return "Invalid credentials"
 
     return render_template("login.html")
 
@@ -126,6 +165,8 @@ def register():
 
     return render_template("register.html")
 
+
+
 # ==============================
 # LOGOUT
 # ==============================
@@ -149,7 +190,8 @@ def history():
         history=history,
         user=session["user"]
     )
-    # ==============================
+
+# ==============================
 # DELETE ONE ITEM
 # ==============================
 @app.route("/delete/<int:id>")
@@ -165,7 +207,6 @@ def delete_item(id):
 
     return redirect("/history")
 
-
 # ==============================
 # DELETE ALL HISTORY
 # ==============================
@@ -180,7 +221,7 @@ def delete_all():
     return redirect("/history")
 
 # ==============================
-# PREDICT
+# PREDICT 
 # ==============================
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -196,6 +237,17 @@ def predict():
 
     disease = predict_disease(symptoms)
 
+    # Description
+    description = get_description(disease)
+
+    # Precautions (MEDICATION)
+    precautions = get_precautions(disease)
+
+    medicine = {
+        "medicines": precautions,
+        "usage": "Follow these precautions carefully and consult a doctor if symptoms persist."
+    }
+
     # Save history
     new_record = History(
         username=session["user"],
@@ -210,13 +262,9 @@ def predict():
     if disease in SEVERE_DISEASES:
         warning = "⚠️ Serious condition detected!"
 
-    medicine = MEDICINE_DATA.get(disease, {
-        "medicines": ["Consult a doctor"],
-        "usage": "No data available"
-    })
-
     return jsonify({
         "disease": disease,
+        "description": description,
         "warning": warning,
         "medicines": medicine["medicines"],
         "usage": medicine["usage"]

@@ -1,53 +1,125 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>History</title>
 
 <style>
-body {
+* {
     margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
     font-family: "Segoe UI", sans-serif;
-    background: #f1f5f9;
+    background: linear-gradient(135deg, #dbeafe, #f0f9ff);
+    min-height: 100vh;
 }
 
+/* Container */
 .container {
-    padding: 30px;
+    max-width: 900px;
+    margin: auto;
+    padding: 40px 20px;
 }
 
+/* Header */
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 30px;
 }
 
+.header h2 {
+    font-weight: 600;
+    color: #1e3a8a;
+}
+
+/* Button Group */
+.header div {
+    display: flex;
+    gap: 12px;
+}
+
+/* Buttons */
+button {
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.3s ease;
+}
+
+/* New Diagnosis */
+.New-Diagnosis {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    padding: 10px 16px;
+}
+
+.New-Diagnosis:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
+}
+
+/* Delete All */
+.delete-all {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    padding: 10px 16px;
+}
+
+.delete-all:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(220, 38, 38, 0.3);
+}
+
+/* Cards */
 .card {
-    background: white;
-    padding: 15px;
-    margin: 10px 0;
-    border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    padding: 18px;
+    margin: 12px 0;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: 0.3s ease;
 }
 
-button {
-    padding: 6px 10px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
 }
 
+/* Text inside card */
+.card b {
+    color: #1e3a8a;
+}
+
+/* Delete Button */
 .delete-btn {
     background: #ef4444;
     color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
 }
 
-.delete-all {
+.delete-btn:hover {
     background: #dc2626;
-    color: white;
-    padding: 10px 15px;
 }
+
+/* Empty State */
+.empty {
+    text-align: center;
+    margin-top: 50px;
+    color: #64748b;
+    font-size: 18px;
+}
+
 </style>
 
 </head>
@@ -59,25 +131,39 @@ button {
     <div class="header">
         <h2>🧠 History for {{ user }}</h2>
 
-        <!-- DELETE ALL -->
-        <a href="/delete_all" onclick="return confirm('Delete ALL history? This cannot be undone!')">
-            <button class="delete-all">Delete All</button>
-        </a>
+        <div>
+
+            <!-- NEW DIAGNOSIS -->
+            <a href="{{ url_for('dashboard') }}" style="text-decoration:none;">
+                <button class="New-Diagnosis">🏠 New Diagnosis</button>
+            </a>
+
+            <!-- DELETE ALL -->
+            <a href="/delete_all" onclick="return confirm('Delete ALL history? This cannot be undone!')">
+                <button class="delete-all">🗑️ Delete All</button>
+            </a>
+
+        </div>
     </div>
 
-    {% for h in history %}
-        <div class="card">
-            <div>
-                <b>Disease:</b> {{ h.disease }} <br>
-                <b>Symptoms:</b> {{ h.symptoms }}
-            </div>
+    {% if history %}
+        {% for h in history %}
+            <div class="card">
+                <div>
+                    <b>Disease:</b> {{ h.disease }} <br>
+                    <b>Symptoms:</b> {{ h.symptoms }}
+                </div>
 
-            <!-- DELETE ONE -->
-            <a href="/delete/{{ h.id }}" onclick="return confirm(' Delete This Record?')">
-                <button class="delete-btn">Delete</button>
-            </a>
+                <a href="/delete/{{ h.id }}" onclick="return confirm('Delete This Record?')">
+                    <button class="delete-btn">Delete</button>
+                </a>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty">
+            No history yet 🤷‍♂️
         </div>
-    {% endfor %}
+    {% endif %}
 
 </div>
 

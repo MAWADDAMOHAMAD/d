@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About Us - SMDSS</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body{
+    background: linear-gradient(135deg, #e0f2ff, #f8fbff);
+    color:#1f2937;
+}
+
+/* NAVBAR */
+.navbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:20px 60px;
+    background:white;
+    box-shadow:0 4px 20px rgba(0,0,0,0.05);
+}
+
+.logo{
+    font-size:22px;
+    font-weight:700;
+    color:#2563eb;
+}
+
+
+
+.nav-links a{
+    margin-left:25px;
+    text-decoration:none;
+    color:#374151;
+    font-weight:500;
+}
+
+.nav-links a:hover{
+    color:#2563eb;
+}
+
+/* HERO SECTION */
+.hero{
+    text-align:center;
+    padding:80px 20px;
+}
+
+.hero h1{
+    font-size:48px;
+    color:#111827;
+}
+
+.hero p{
+    margin-top:15px;
+    font-size:18px;
+    color:#6b7280;
+    max-width:700px;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+/* CARDS SECTION */
+.container{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:25px;
+    padding:50px 60px;
+}
+
+.card{
+    background:white;
+    padding:30px;
+    border-radius:20px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.05);
+    transition:0.3s;
+}
+
+.card:hover{
+    transform:translateY(-8px);
+    box-shadow:0 15px 35px rgba(0,0,0,0.1);
+}
+
+.card h3{
+    color:#2563eb;
+    margin-bottom:10px;
+}
+
+.card p{
+    color:#6b7280;
+    line-height:1.6;
+}
+
+/* FOOTER */
+.footer{
+    text-align:center;
+    padding:30px;
+    background:white;
+    margin-top:40px;
+    color:#6b7280;
+}
+
+/* BUTTON STYLE */
+.btn{
+    display:inline-block;
+    margin-top:20px;
+    padding:12px 25px;
+    background:#2563eb;
+    color:white;
+    border-radius:12px;
+    text-decoration:none;
+    transition:0.3s;
+}
+
+.btn:hover{
+    background:#1d4ed8;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+    <div class="logo">SMDSS</div>
+    <div class="nav-links">
+        
+       
+    </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+    <h1>About The System</h1>
+    <p>
+        Smart Medical Diagnosis System (SMDSS) is an AI-powered platform designed to help users identify possible diseases based on symptoms and provide guidance, precautions, and nearby hospital recommendations.
+    </p>
+    <a href="{{ url_for('try_system') }}" class="btn">Try the System</a>
+</a>
+</div>
+
+<!-- CARDS -->
+<div class="container">
+
+    <div class="card">
+        <h3>🔬 AI Diagnosis</h3>
+        <p>
+            The system analyzes user symptoms using intelligent algorithms to predict possible diseases with high accuracy.
+        </p>
+    </div>
+
+    <div class="card">
+        <h3>🏥 Hospital Finder</h3>
+        <p>
+            It locate the nearest hospital based on your real-time location and provide instant navigation routes.
+        </p>
+    </div>
+
+    <div class="card">
+        <h3>💊 Treatment Guidance</h3>
+        <p>
+            Get recommended precautions and care instructions for each predicted condition.
+        </p>
+    </div>
+
+    <div class="card">
+        <h3>🔒 Privacy First</h3>
+        <p>
+            Your health data is not stored permanently and is handled securely during your session.
+        </p>
+    </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+    © 2026 Smart Medical Diagnosis System 
+</div>
+
+</body>
+</html>

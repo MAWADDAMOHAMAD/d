@@ -10,7 +10,8 @@
 body {
     margin: 0;
     font-family: "Segoe UI", sans-serif;
-    background: #f1f5f9;
+   background: linear-gradient(135deg, #e0f2ff, #f8fbff);
+    color:#1f2937
 }
 
 /* Layout */
@@ -94,6 +95,32 @@ input:focus {
     box-shadow: 0 0 0 4px rgba(59,130,246,0.15);
 }
 
+/* Suggestions */
+.input-wrapper {
+    position: relative;
+}
+
+.suggestions {
+    position: absolute;
+    top: 45px;
+    width: 100%;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.suggestion-item {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.suggestion-item:hover {
+    background: #f1f5f9;
+}
+
 /* Button */
 .predict-btn {
     margin-top: 15px;
@@ -153,17 +180,23 @@ input:focus {
     <div class="sidebar">
         <p><b>{{ user }}</b></p>
 
-        <a href="/" style="text-decoration:none;">
-            <button class="menu-btn">🏠 Home</button>
-        </a>
+        <a href="/dashboard" style="text-decoration:none;">
+    <button class="menu-btn">🏠 Home</button>
+</a>
 
         <a href="/history" style="text-decoration:none;">
             <button class="menu-btn">🔍 Search History</button>
         </a>
+        
+    <a href="{{ url_for('about') }}">
+    <button class="menu-btn">ℹ️ About The System </button>
+</a>
 
         <a href="/logout" style="text-decoration:none;">
             <button class="menu-btn logout">⏻ Log Out</button>
         </a>
+
+        
     </div>
 
     <!-- Main -->
@@ -177,15 +210,42 @@ input:focus {
                 <h3>Enter at least 5 Symptoms</h3>
 
                 <div class="grid">
-                    <input list="symptoms" name="symptom1" placeholder="Symptom 1" required>
-                    <input list="symptoms" name="symptom2" placeholder="Symptom 2" required>
-                    <input list="symptoms" name="symptom3" placeholder="Symptom 3">
 
-                    <input list="symptoms" name="symptom4" placeholder="Symptom 4">
-                    <input list="symptoms" name="symptom5" placeholder="Symptom 5">
-                    <input list="symptoms" name="symptom6" placeholder="Symptom 6">
+                    <div class="input-wrapper">
+                        <input name="symptom1" placeholder="Symptom 1" required onkeyup="showSuggestions(this)">
+                        <div class="suggestions"></div>
+                    </div>
 
-                    <input list="symptoms" name="symptom7" placeholder="Symptom 7">
+                    <div class="input-wrapper">
+                        <input name="symptom2" placeholder="Symptom 2" required onkeyup="showSuggestions(this)">
+                        <div class="suggestions"></div>
+                    </div>
+
+                    <div class="input-wrapper">
+                        <input name="symptom3" placeholder="Symptom 3" onkeyup="showSuggestions(this)">
+                        <div class="suggestions"></div>
+                    </div>
+
+                    <div class="input-wrapper">
+                        <input name="symptom4" placeholder="Symptom 4" onkeyup="showSuggestions(this)">
+                        <div class="suggestions"></div>
+                    </div>
+
+                    <div class="input-wrapper">
+                        <input name="symptom5" placeholder="Symptom 5" onkeyup="showSuggestions(this)">
+                        <div class="suggestions"></div>
+                    </div>
+
+                    <div class="input-wrapper">
+                        <input name="symptom6" placeholder="Symptom 6" onkeyup="showSuggestions(this)">
+                        <div class="suggestions"></div>
+                    </div>
+
+                    <div class="input-wrapper">
+                        <input name="symptom7" placeholder="Symptom 7" onkeyup="showSuggestions(this)">
+                        <div class="suggestions"></div>
+                    </div>
+
                 </div>
 
                 <button type="submit" class="predict-btn">Diagnose</button>
@@ -193,30 +253,27 @@ input:focus {
 
         </form>
 
-        <!-- Autocomplete -->
-        <datalist id="symptoms">
-            {% for s in symptoms %}
-            <option value="{{ s }}">
-            {% endfor %}
-        </datalist>
-
         <!-- RESULT -->
         <div id="resultBox" class="result-box">
 
             <div id="warningBox" class="warning"></div>
+
             <button id="hospitalBtn" style="display:none; margin-bottom:15px; padding:10px; border:none; border-radius:10px; background:#dc2626; color:white; cursor:pointer;">
-        🏥 Find Nearby Hospitals
-    </button>
+                🏥 Find Nearby Hospitals
+            </button>
 
             <div class="cards">
 
                 <div class="card">
                     <h3>Diagnosis</h3>
                     <p id="diseaseText"></p>
+
+                    <h4>Description</h4>
+                    <p id="descriptionText"></p>
                 </div>
 
                 <div class="card">
-                    <h3>Medication Guidance</h3>
+                    <h3>Precaution Guidance</h3>
                     <p id="medicineText">Waiting for result...</p>
                     <p id="usageText"></p>
                 </div>
@@ -230,6 +287,34 @@ input:focus {
 </div>
 
 <script>
+let allSymptoms = {{ symptoms | tojson }};
+
+function showSuggestions(input) {
+    let value = input.value.toLowerCase();
+    let box = input.nextElementSibling;
+
+    box.innerHTML = "";
+
+    if (value.length === 0) return;
+
+    let filtered = allSymptoms.filter(s =>
+        s.toLowerCase().includes(value)
+    );
+
+    filtered.slice(0, 5).forEach(s => {
+        let div = document.createElement("div");
+        div.classList.add("suggestion-item");
+        div.innerText = s;
+
+        div.onclick = () => {
+            input.value = s;
+            box.innerHTML = "";
+        };
+
+        box.appendChild(div);
+    });
+}
+
 document.getElementById("diagnosisForm").addEventListener("submit", function(e){
     e.preventDefault();
 
@@ -245,6 +330,7 @@ document.getElementById("diagnosisForm").addEventListener("submit", function(e){
         document.getElementById("resultBox").style.display = "block";
 
         document.getElementById("diseaseText").innerText = data.disease;
+        document.getElementById("descriptionText").innerText = data.description;
 
         document.getElementById("medicineText").innerText =
             "Medicines: " + data.medicines.join(", ");
@@ -258,10 +344,7 @@ document.getElementById("diagnosisForm").addEventListener("submit", function(e){
         if(data.warning){
             warningBox.style.display = "block";
             warningBox.innerText = data.warning;
-
-            // SHOW hospital button
             hospitalBtn.style.display = "block";
-
         } else {
             warningBox.style.display = "none";
             hospitalBtn.style.display = "none";
@@ -269,8 +352,7 @@ document.getElementById("diagnosisForm").addEventListener("submit", function(e){
     });
 });
 
-
-// 🏥 OPEN GOOGLE MAPS
+// Hospital button
 document.getElementById("hospitalBtn").addEventListener("click", function(){
 
     if(navigator.geolocation){
@@ -283,8 +365,6 @@ document.getElementById("hospitalBtn").addEventListener("click", function(){
 
             window.open(url, "_blank");
 
-        }, function(){
-            alert("Location access denied!");
         });
     } else {
         alert("Geolocation not supported.");
