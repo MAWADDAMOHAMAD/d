@@ -292,7 +292,6 @@ let allSymptoms = {{ symptoms | tojson }};
 function showSuggestions(input) {
     let value = input.value.toLowerCase();
     let box = input.nextElementSibling;
-
     box.innerHTML = "";
 
     if (value.length === 0) return;
@@ -329,26 +328,40 @@ document.getElementById("diagnosisForm").addEventListener("submit", function(e){
 
         document.getElementById("resultBox").style.display = "block";
 
-        document.getElementById("diseaseText").innerText = data.disease;
-        document.getElementById("descriptionText").innerText = data.description;
+        document.getElementById("diseaseText").innerText =
+            data.disease || "Not detected";
 
-        document.getElementById("medicineText").innerText =
-            "Medicines: " + data.medicines.join(", ");
+        document.getElementById("descriptionText").innerText =
+            data.description || "No description available";
 
-        document.getElementById("usageText").innerText =
-            "Usage: " + data.usage;
+        // ✅ Precautions (from dataset)
+        document.getElementById("medicineText").innerHTML =
+            "<b>Precautions:</b><ul>" +
+            (data.precautions ? data.precautions.map(p => `<li>${p}</li>`).join("") : "<li>N/A</li>") +
+            "</ul>";
+
+        document.getElementById("usageText").innerText = "";
 
         let warningBox = document.getElementById("warningBox");
         let hospitalBtn = document.getElementById("hospitalBtn");
 
-        if(data.warning){
+        if (data.warning) {
             warningBox.style.display = "block";
             warningBox.innerText = data.warning;
-            hospitalBtn.style.display = "block";
         } else {
             warningBox.style.display = "none";
+        }
+
+        if (data.show_hospital_button) {
+            hospitalBtn.style.display = "block";
+        } else {
             hospitalBtn.style.display = "none";
         }
+
+    })
+    .catch(error => {
+        console.error(error);
+        alert("Prediction error!");
     });
 });
 
@@ -361,8 +374,7 @@ document.getElementById("hospitalBtn").addEventListener("click", function(){
             let lat = position.coords.latitude;
             let lon = position.coords.longitude;
 
-            let url = `https://www.google.com/maps/search/hospitals/@${lat},${lon},15z`;
-
+            let url = `https://www.google.com/maps/search/hospital+near+me/@${lat},${lon},15z`;
             window.open(url, "_blank");
 
         });

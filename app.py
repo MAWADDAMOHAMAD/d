@@ -1,12 +1,18 @@
 from flask import Flask, render_template, request, jsonify, redirect, session, url_for
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 import pickle
 import numpy as np
 import pandas as pd
-
+from datetime import timedelta
 
 app = Flask(__name__)
 app.secret_key = "secret123"
+
+# ==============================
+# Session
+# ==============================
+app.permanent_session_lifetime = timedelta(days=7)
 
 # ==============================
 # Database
@@ -20,97 +26,82 @@ db = SQLAlchemy(app)
 # ==============================
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique=True, nullable=False)
-    password = db.Column(db.String(100), nullable=False)
+    first_name = db.Column(db.String(100))
+    last_name = db.Column(db.String(100))
+    email = db.Column(db.String(120), unique=True)
+    username = db.Column(db.String(100), unique=True)
+    password = db.Column(db.String(255))
 
 class History(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), nullable=False)
-    disease = db.Column(db.String(100), nullable=False)
-    symptoms = db.Column(db.String(300), nullable=False)
+    username = db.Column(db.String(100))
+    disease = db.Column(db.String(100))
+    symptoms = db.Column(db.String(300))
 
 # ==============================
-# Load ML Model
+# ML Model
 # ==============================
 model = pickle.load(open("model/disease_model.pkl", "rb"))
 symptoms_list = pickle.load(open("model/symptoms_list.pkl", "rb"))
 
 # ==============================
-# Load Description Dataset ✅
+# Data
 # ==============================
 description_df = pd.read_csv('dataset/archive/symptom_Description.csv')
 description_df.columns = description_df.columns.str.strip()
 
-def get_description(disease_name):
-    result = description_df[description_df['Disease'] == disease_name]
-
-    if not result.empty:
-        return result['Description'].values[0]
-    else:
-        return "No description available."
+precaution_df = pd.read_csv('dataset/archive/symptom_precaution.csv')
+precaution_df.columns = precaution_df.columns.str.strip()
 
 # ==============================
 # Severe Diseases
 # ==============================
 SEVERE_DISEASES = [
-    "Heart attack","Paralysis (brain hemorrhage)","Tuberculosis",
-    "Hepatitis B","Hepatitis C","Hepatitis D","Hepatitis E",
-    "Alcoholic hepatitis","AIDS","Pneumonia","Dengue","Typhoid"
+    "heart attack","paralysis (brain hemorrhage)","tuberculosis",
+    "hepatitis b","hepatitis c","hepatitis d","hepatitis e",
+    "alcoholic hepatitis","aids","pneumonia","dengue","typhoid"
 ]
 
 # ==============================
-# Medicine Data (Simple Default)
+# Helpers
 # ==============================
-precaution_df = pd.read_csv('dataset/archive/symptom_precaution.csv')
-precaution_df.columns = precaution_df.columns.str.strip()
-
-def get_precautions(disease_name):
-    result = precaution_df[precaution_df['Disease'] == disease_name]
-
+def get_description(disease):
+    result = description_df[description_df['Disease'] == disease]
     if not result.empty:
-        precautions = result.iloc[0, 1:].dropna().tolist()
-        return precautions
-    else:
-        return ["Consult a doctor"]
+        return result['Description'].values[0]
+    return "No description available."
 
-# ==============================
-# Helper: Predict Disease
-# ==============================
-def predict_disease(user_symptoms):
-    input_vector = np.zeros(len(symptoms_list))
+def get_precautions(disease):
+    result = precaution_df[precaution_df['Disease'] == disease]
+    if not result.empty:
+        return result.iloc[0, 1:].dropna().tolist()
+    return ["Consult a doctor"]
 
-    for s in user_symptoms:
+def predict_disease(symptoms):
+    vector = np.zeros(len(symptoms_list))
+    for s in symptoms:
         if s in symptoms_list:
-            input_vector[symptoms_list.index(s)] = 1
-
-    return model.predict([input_vector])[0]
+            vector[symptoms_list.index(s)] = 1
+    return model.predict([vector])[0]
 
 # ==============================
-# about
+# Routes
 # ==============================
 @app.route("/")
 def home():
     return render_template("about.html")
 
-
 @app.route("/about")
 def about():
     return render_template("about.html")
 
-# ==============================
-# try system
-# ==============================
-
-
+# ✅ FIXED (was missing → caused error)
 @app.route("/try-system")
 def try_system():
     if "user" in session:
-        return redirect(url_for("dashboard"))  # already logged in → go system
-    else:
-        return redirect(url_for("login"))      # first time → login
-# ==============================
-# HOME (Dashboard)
-# ==============================
+        return redirect(url_for("dashboard"))
+    return redirect(url_for("login"))
+
 @app.route("/dashboard")
 def dashboard():
     if "user" not in session:
@@ -124,154 +115,182 @@ def dashboard():
         history=history,
         user=session["user"]
     )
-# ==============================
-# LOGIN
-# ==============================
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-
-        user = User.query.filter_by(username=username, password=password).first()
-
-        if user:
-            session["user"] = username
-            return redirect(url_for("dashboard"))  # 🔥 GO TO SYSTEM
-
-        return "Invalid credentials"
-
-    return render_template("login.html")
 
 # ==============================
-# REGISTER
+# AUTH
 # ==============================
-@app.route("/register", methods=["GET", "POST"])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
+    if request.method == 'POST':
+        first_name = request.form['first_name'].strip()
+        last_name = request.form['last_name'].strip()
+        email = request.form['email'].strip()
+        password = generate_password_hash(request.form['password'])
 
-        existing_user = User.query.filter_by(username=username).first()
+        if User.query.filter_by(email=email).first():
+            return "⚠️ Email already exists"
 
-        if existing_user:
-            return "❌ Username already exists"
+        base_username = (first_name + last_name).lower()
+        username = base_username
+        counter = 1
 
-        new_user = User(username=username, password=password)
+        while User.query.filter_by(username=username).first():
+            username = f"{base_username}{counter}"
+            counter += 1
+
+        new_user = User(
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            username=username,
+            password=password
+        )
+
         db.session.add(new_user)
         db.session.commit()
 
-        return redirect(url_for("login"))
+        session["register_message"] = f"✅ Your username is: {username}"
+        return redirect("/login")
 
     return render_template("register.html")
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    message = session.pop("register_message", None)
 
+    if request.method == "POST":
+        user = User.query.filter_by(username=request.form["username"]).first()
 
-# ==============================
-# LOGOUT
-# ==============================
+        if user and check_password_hash(user.password, request.form["password"]):
+            session["user"] = user.username
+
+            # ✅ ADMIN SUPPORT
+            if user.username == "admin":
+                return redirect(url_for("admin"))
+
+            return redirect(url_for("dashboard"))
+
+        return "❌ Invalid credentials"
+
+    return render_template("login.html", message=message)
+
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login"))
+    return redirect("/login")
 
 # ==============================
-# HISTORY PAGE
+# HISTORY (FIXED - was missing)
 # ==============================
 @app.route("/history")
 def history():
     if "user" not in session:
-        return redirect(url_for("login"))
+        return redirect("/login")
 
     history = History.query.filter_by(username=session["user"]).all()
 
-    return render_template(
-        "history.html",
-        history=history,
-        user=session["user"]
-    )
+    return render_template("history.html", history=history, user=session["user"])
 
 # ==============================
-# DELETE ONE ITEM
+# DELETE
 # ==============================
 @app.route("/delete/<int:id>")
 def delete_item(id):
-    if "user" not in session:
-        return redirect("/login")
-
     item = History.query.get(id)
 
-    if item and item.username == session["user"]:
+    if item and item.username == session.get("user"):
         db.session.delete(item)
         db.session.commit()
 
     return redirect("/history")
 
-# ==============================
-# DELETE ALL HISTORY
-# ==============================
 @app.route("/delete_all")
 def delete_all():
-    if "user" not in session:
-        return redirect("/login")
-
-    History.query.filter_by(username=session["user"]).delete()
+    History.query.filter_by(username=session.get("user")).delete()
     db.session.commit()
-
     return redirect("/history")
 
 # ==============================
-# PREDICT 
+# ADMIN (FULLY WORKING)
+# ==============================
+@app.route('/admin')
+def admin():
+    if session.get('user') != 'admin':
+        return "Access denied"
+
+    total_users = User.query.count()
+    total_history = History.query.count()
+
+    top = db.session.query(
+        History.disease,
+        db.func.count(History.disease)
+    ).group_by(History.disease).order_by(db.func.count(History.disease).desc()).first()
+
+    top_disease = top[0] if top else "N/A"
+
+    data = db.session.query(
+        User.first_name,
+        User.last_name,
+        User.email,
+        History.symptoms,
+        History.disease
+    ).join(History, User.username == History.username).all()
+
+    return render_template(
+        "admin.html",
+        data=data,
+        total_users=total_users,
+        total_history=total_history,
+        top_disease=top_disease
+    )
+
+# ==============================
+# PREDICTION
 # ==============================
 @app.route("/predict", methods=["POST"])
 def predict():
+
     if "user" not in session:
-        return jsonify({"error": "Not logged in"})
+        return jsonify({"error": "Not logged in"}), 401
 
     symptoms = []
-
     for i in range(1, 8):
         s = request.form.get(f"symptom{i}")
         if s:
             symptoms.append(s)
 
-    disease = predict_disease(symptoms)
+    disease = str(predict_disease(symptoms))
+    disease_clean = disease.lower().strip()
 
-    # Description
     description = get_description(disease)
-
-    # Precautions (MEDICATION)
     precautions = get_precautions(disease)
 
-    medicine = {
-        "medicines": precautions,
-        "usage": "Follow these precautions carefully and consult a doctor if symptoms persist."
-    }
+    warning = None
+    show_hospital_button = False
+
+    if disease_clean in SEVERE_DISEASES:
+        warning = "⚠️ Serious condition! Please seek immediate medical attention."
+        show_hospital_button = True
 
     # Save history
-    new_record = History(
+    new_history = History(
         username=session["user"],
         disease=disease,
         symptoms=", ".join(symptoms)
     )
-
-    db.session.add(new_record)
+    db.session.add(new_history)
     db.session.commit()
-
-    warning = None
-    if disease in SEVERE_DISEASES:
-        warning = "⚠️ Serious condition detected!"
 
     return jsonify({
         "disease": disease,
         "description": description,
         "warning": warning,
-        "medicines": medicine["medicines"],
-        "usage": medicine["usage"]
+        "show_hospital_button": show_hospital_button,
+        "precautions": precautions
     })
 
 # ==============================
-# RUN APP
+# RUN
 # ==============================
 if __name__ == "__main__":
     with app.app_context():

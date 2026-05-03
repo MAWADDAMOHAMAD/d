@@ -94,7 +94,11 @@ a:hover {
 
     <input name="username" placeholder="Username" required>
     <input name="password" type="password" placeholder="Password" required>
-
+{% if message %}
+    <div style="padding:10px; background:#d1fae5; color:#065f46; margin-bottom:10px; border-radius:8px;">
+        {{ message }}
+    </div>
+{% endif %}
     <button type="submit">Login</button>
 
     <a href="/register">Create new account</a>
