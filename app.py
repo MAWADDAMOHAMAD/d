@@ -54,6 +54,12 @@ precaution_df = pd.read_csv('dataset/archive/symptom_precaution.csv')
 precaution_df.columns = precaution_df.columns.str.strip()
 
 # ==============================
+# Medication Data (NEW)
+# ==============================
+medication_df = pd.read_csv('dataset/archive/disease_medication.csv')
+medication_df.columns = medication_df.columns.str.strip()
+
+# ==============================
 # Severe Diseases
 # ==============================
 SEVERE_DISEASES = [
@@ -77,6 +83,13 @@ def get_precautions(disease):
         return result.iloc[0, 1:].dropna().tolist()
     return ["Consult a doctor"]
 
+# ✅ NEW FUNCTION
+def get_medication(disease):
+    result = medication_df[medication_df['Disease'].str.lower() == disease.lower()]
+    if not result.empty:
+        return result['Medication'].values[0]
+    return "No medication found"
+
 def predict_disease(symptoms):
     vector = np.zeros(len(symptoms_list))
     for s in symptoms:
@@ -95,7 +108,6 @@ def home():
 def about():
     return render_template("about.html")
 
-# ✅ FIXED (was missing → caused error)
 @app.route("/try-system")
 def try_system():
     if "user" in session:
@@ -164,7 +176,6 @@ def login():
         if user and check_password_hash(user.password, request.form["password"]):
             session["user"] = user.username
 
-            # ✅ ADMIN SUPPORT
             if user.username == "admin":
                 return redirect(url_for("admin"))
 
@@ -180,7 +191,7 @@ def logout():
     return redirect("/login")
 
 # ==============================
-# HISTORY (FIXED - was missing)
+# HISTORY
 # ==============================
 @app.route("/history")
 def history():
@@ -211,7 +222,7 @@ def delete_all():
     return redirect("/history")
 
 # ==============================
-# ADMIN (FULLY WORKING)
+# ADMIN
 # ==============================
 @app.route('/admin')
 def admin():
@@ -265,6 +276,9 @@ def predict():
     description = get_description(disease)
     precautions = get_precautions(disease)
 
+    # ✅ NEW
+    medication = get_medication(disease)
+
     warning = None
     show_hospital_button = False
 
@@ -272,7 +286,6 @@ def predict():
         warning = "⚠️ Serious condition! Please seek immediate medical attention."
         show_hospital_button = True
 
-    # Save history
     new_history = History(
         username=session["user"],
         disease=disease,
@@ -286,7 +299,8 @@ def predict():
         "description": description,
         "warning": warning,
         "show_hospital_button": show_hospital_button,
-        "precautions": precautions
+        "precautions": precautions,
+        "medication": medication  # ✅ NEW
     })
 
 # ==============================

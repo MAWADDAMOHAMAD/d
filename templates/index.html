@@ -334,13 +334,15 @@ document.getElementById("diagnosisForm").addEventListener("submit", function(e){
         document.getElementById("descriptionText").innerText =
             data.description || "No description available";
 
-        // ✅ Precautions (from dataset)
+        // ✅ NEW: Medication
         document.getElementById("medicineText").innerHTML =
+            "<b>Medication:</b> " + (data.medication || "N/A");
+
+        // ✅ Precautions under medication
+        document.getElementById("usageText").innerHTML =
             "<b>Precautions:</b><ul>" +
             (data.precautions ? data.precautions.map(p => `<li>${p}</li>`).join("") : "<li>N/A</li>") +
             "</ul>";
-
-        document.getElementById("usageText").innerText = "";
 
         let warningBox = document.getElementById("warningBox");
         let hospitalBtn = document.getElementById("hospitalBtn");
